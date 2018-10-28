@@ -1,2 +1,11 @@
 /**app.wxss**/
 @import "style/weui.wxss"
+.txt_al_l{
+	text-align: left;
+}
+.txt_al_c{
+	text-align: center;
+}
+.txt_al_r{
+	text-align: right;
+}

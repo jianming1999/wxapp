@@ -13,7 +13,8 @@ Page({
     currentTimeText: '00:00',
     currentTime:0,
     durationText: '00:00',
-    duration:0
+    duration:0,
+    playing: false
   },
 
   /**
@@ -21,34 +22,49 @@ Page({
    */
   onLoad: function (options) {
     console.log('options,', options);
-    let mid = options.mid;
-    let db = wx.cloud.database();
-    // 查询当前用户所有的 counters
-    db.collection('mp3').where({_id: mid}).get({
-      success: res => {
-        let data = res.data && res.data[0];
-        this.setData({
-          poster: data.poster,
-          name: data.name,
-          author: data.author,
-          src: data.src,
-        });
-        console.log('this.audioCtx');
-        setTimeout(() => {
-          // this.audioCtx.play();
-          this.playByOption(this.backgroundAudioManager, data);
-          console.log('[audio] play');
-        }, 300);
-        console.log('[数据库] [查询记录] 成功: ', res)
-      },
-      fail: err => {
-        wx.showToast({
-          icon: 'none',
-          title: '查询记录失败'
-        })
-        console.error('[数据库] [查询记录] 失败：', err)
+    let fileHash = options.fileHash,
+      albumID = options.albumID,
+      mid = options.mid,
+      db = wx.cloud.database(),
+      data;
+    this.currentIndex = 0;
+    this.musicList = [];
+    if(fileHash && albumID){
+      wx.request({
+        url: 'https://wwwapi.kugou.com/yy/index.php?r=play/getdata&hash='+ fileHash +'&album_id=' + albumID,
+        method: 'get',
+        success: (res) => {
+          let musicDetail = res.data && res.data.data;
+          this.playByData({
+            author: musicDetail.author_name,
+            name: musicDetail.song_name,
+            poster: musicDetail.img,
+            src: musicDetail.play_url
+          });
+        }
+      });
+    }else if(mid){
+      try{
+        this.musicList = wx.getStorageSync('musicList');
+        console.log(this.musicList);
+      }catch(e){}
+      
+       data = this.musicList.filter((item, index) => {
+        if(item._id === mid){
+          this.currentIndex = index;
+          return true;
+        }
+       })[0];
+
+      if(!data){
+          return;
       }
-    });
+        
+      this.playByData(data);
+    }
+    
+    
+      
   },
 
   /**
@@ -59,8 +75,14 @@ Page({
     this.audioCtx = wx.createAudioContext('myAudio');
 
     this.backgroundAudioManager = wx.getBackgroundAudioManager();
+    this.backgroundAudioManager.onPlay
+(() => {
+      console.log('[onPlay]');
+      this.triggerDurationUpdate();
+    });
     this.backgroundAudioManager.onCanplay
 (() => {
+      console.log('[onCanplay]');
       this.triggerDurationUpdate();
     });
     this.backgroundAudioManager.onTimeUpdate(() => {
@@ -122,6 +144,67 @@ Page({
       this.backgroundAudioManager.play();
     }
   },
+  onPlay: function(){
+    console.log('[onPlay]');
+    this.backgroundAudioManager.play();
+    this.setData({
+      playing: true
+    });
+  },
+  onPause: function(){
+    console.log('[onPause]');
+    this.backgroundAudioManager.pause();
+    this.setData({
+      playing: false
+    });
+  },
+  onPrev: function(){
+    let ci = (this.currentIndex - 1);
+    if(ci < 0){
+      wx.showToast({
+        title: '别点了，没有上一首',
+        icon: 'none',
+        duration: 2000
+      });
+      return;
+    }
+    if(this.musicList[ci]){
+      this.currentIndex = ci;
+      this.playByData(this.musicList[ci]);
+    }
+  },
+  onNext: function(){
+    let ci = (this.currentIndex + 1);
+    if(ci >= this.musicList.length){
+      wx.showToast({
+        title: '别点了，没有下一首',
+        icon: 'none',
+        duration: 2000
+      });
+      return;
+    }
+    if(this.musicList[ci]){
+      this.currentIndex = ci;
+      this.playByData(this.musicList[ci]);
+    }
+  },
+  playByData: function(data){
+    this.setData({
+      poster: data.poster,
+      name: data.name,
+      author: data.author,
+      src: data.src,
+    });
+    console.log('this.audioCtx');
+    setTimeout(() => {
+      // this.audioCtx.play();
+      this.playByOption(this.backgroundAudioManager, data);
+      this.setData({
+        playing: true
+      });
+      console.log('[audio] play');
+    }, 300);
+  },
   playByOption: function(audioContext, options){
     // 歌曲名
     audioContext.title = options.name;
@@ -135,7 +218,7 @@ Page({
     audioContext.src = options.src;
   },
   triggerDurationUpdate: function(){
-    if (this.backgroundAudioManager.duration && this.data.duration === 0) {
+    if (this.backgroundAudioManager.duration) {
       this.setData({
         duration: this.backgroundAudioManager.duration,
         durationText: this.numberFix(parseInt(this.backgroundAudioManager.duration))
@@ -143,7 +226,7 @@ Page({
     }
   },
   tenNum: function(num){
-    return Number(num) > 10 ? (num + '') : ('0' + num);
+    return Number(num) >= 10 ? (num + '') : ('0' + num);
   },
   numberFix: function(num){
     let minute = parseInt(num / 60);

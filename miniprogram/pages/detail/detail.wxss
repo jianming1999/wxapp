@@ -1,7 +1,17 @@
 /* miniprogram/pages/detail/detail.wxss */
 .bd_spacing {
-padding:15px;
+	padding:15px;
 }
-.txt_alr{
-  text-align: right
+.audio_box{
+	background-color: #1f74cc;
+	color: #fff;
+	padding-bottom: 15px;
+}
+.audio_box_btn_big{
+	height: 48px;
+	width: 48px;
+}
+.audio_box_btn_small{
+	width: 36px;
+	height: 36px;
 }

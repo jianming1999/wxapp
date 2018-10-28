@@ -18,9 +18,25 @@
     
     
     <slider bindchange="onSliderChange" value="{{sliderVal}}"/>
-    <view class="weui-flex bd_spacing">
-      <view class="weui-flex__item">{{currentTimeText}}</view>
-      <view class="weui-flex__item txt_alr">{{durationText}}</view>
+
+    <view class="audio_box">
+      <view class="weui-flex bd_spacing">
+        <view class="weui-flex__item">{{currentTimeText}}</view>
+        <view class="weui-flex__item txt_al_r">{{durationText}}</view>
+      </view>
+
+      <view class="weui-flex">
+        <view class="weui-flex__item txt_al_r">
+          <image bindtap="onPrev" class="audio_box_btn_small" src="/images/prev_btn.png" mode="aspectFit" />
+        </view>
+        <view class="weui-flex__item txt_al_c">
+          <image wx:if="{{playing}}" bindtap="onPause" class="audio_box_btn_big" src="/images/pause_btn.png" mode="aspectFit" />
+          <image wx:else bindtap="onPlay" class="audio_box_btn_big" src="/images/play_btn.png" mode="aspectFit" />
+        </view>
+        <view class="weui-flex__item txt_al_l">
+          <image bindtap="onNext" class="audio_box_btn_small" src="/images/next_btn.png" mode="aspectFit" />
+        </view>
+      </view>
     </view>
 
 </view>

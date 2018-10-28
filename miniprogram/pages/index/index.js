@@ -3,10 +3,10 @@ const app = getApp()
 
 Page({
   data: {
-    avatarUrl: '',
-    userInfo: {},
-    logged: false,
-    musicList: []
+    inputShowed: false,
+    inputVal: "",
+    musicList: [],
+    searchList: []
   },
 
   onLoad: function() {
@@ -14,22 +14,6 @@ Page({
       return
     }
 
-    // 获取用户信息
-    wx.getSetting({
-      success: res => {
-        if (res.authSetting['scope.userInfo']) {
-          // 已经授权，可以直接调用 getUserInfo 获取头像昵称，不会弹框
-          wx.getUserInfo({
-            success: res => {
-              this.setData({
-                avatarUrl: res.userInfo.avatarUrl,
-                userInfo: res.userInfo
-              })
-            }
-          })
-        }
-      }
-    });
     // query db
     
     const db = wx.cloud.database();
@@ -39,6 +23,9 @@ Page({
         this.setData({
           musicList: res.data
         })
+        try {
+          wx.setStorageSync('musicList', res.data);
+        } catch (e) { }
         console.log('[数据库] [查询记录] 成功: ', res)
       },
       fail: err => {
@@ -51,15 +38,74 @@ Page({
     });
     
   },
-
-  onGetUserInfo: function(e) {
-    if (!this.logged && e.detail.userInfo) {
+  showInput: function () {
       this.setData({
-        logged: true,
-        avatarUrl: e.detail.userInfo.avatarUrl,
-        userInfo: e.detail.userInfo
-      })
-    }
+          inputShowed: true
+      });
+  },
+  hideInput: function () {
+      this.setData({
+          inputVal: "",
+          searchList: [],
+          inputShowed: false
+      });
+  },
+  clearInput: function () {
+      this.setData({
+          inputVal: "",
+          searchList: []
+      });
+  },
+  inputTyping: function (e) {
+      this.setData({
+          inputVal: e.detail.value
+      });
+      if(this.searchTimer){
+        clearTimeout(this.searchTimer);        
+      }
+      this.searchTimer = setTimeout(() => {
+        this.searchByKeyword(decodeURIComponent(e.detail.value));
+      }, 500);
+  },
+  searchByKeyword: function(keyword){
+    console.log('...searchByKeyword...keyword:' + keyword);
+    wx.request({
+      url: 'https://songsearch.kugou.com/song_search_v2?keyword='+ (keyword) +'&page=1&pagesize=10&userid=-1&clientver=&platform=WebFilter&tag=em&filter=2&iscorrection=1&privilege_filter=0',
+      method: 'get',
+      success: (res) => {
+        let searchList = res.data && res.data.data && res.data.data.lists;
+        if(searchList && searchList.length){
+          searchList = searchList.map((item) => {
+            return {
+              albumID: item.AlbumID,
+              albumName: item.AlbumName,
+              fileHash: item.FileHash,
+              author: this.removeTagHtml(item.SingerName),
+              name: this.removeTagHtml(item.SongName),
+            };
+          });
+          this.setData({
+            searchList: searchList
+          });
+        }else{
+          wx.showToast({
+            title: '没有搜索到结果',
+            icon: 'none',
+            duration: 2000
+          });
+        }
+      },
+      fail: function(){
+        wx.showToast({
+          title: '出错啦，等下再试',
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    })
+  },
+  removeTagHtml: function(str){
+    return str.replace(/<\/?\w+\/?>/g,'');
   }
 
 })
