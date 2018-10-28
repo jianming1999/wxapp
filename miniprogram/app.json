@@ -1,0 +1,16 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/detail/detail"
+  ],
+  "window": {
+    "backgroundColor": "#F6F6F6",
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#F6F6F6",
+    "navigationBarTitleText": "MusicBox",
+    "navigationBarTextStyle": "black"
+  },
+  "requiredBackgroundModes": [
+    "audio"
+  ]
+}

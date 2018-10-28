@@ -1,0 +1,26 @@
+<!--miniprogram/pages/detail/detail.wxml-->
+<view class="page">
+
+
+    <view class="weui-cells">
+
+      <view class="weui-cell">
+          <view class="weui-cell__hd" style="position: relative;margin-right: 10px;">
+              <image src="{{poster}}" style="width: 50px; height: 50px; display: block"/>
+          </view>
+          <view class="weui-cell__bd">
+              <view>{{name}}</view>
+              <view style="font-size: 13px;color: #888888;">{{author}}</view>
+          </view>
+      </view>
+    </view>
+
+    
+    
+    <slider bindchange="onSliderChange" value="{{sliderVal}}"/>
+    <view class="weui-flex bd_spacing">
+      <view class="weui-flex__item">{{currentTimeText}}</view>
+      <view class="weui-flex__item txt_alr">{{durationText}}</view>
+    </view>
+
+</view>

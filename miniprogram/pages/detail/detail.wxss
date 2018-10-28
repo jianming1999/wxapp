@@ -1,0 +1,7 @@
+/* miniprogram/pages/detail/detail.wxss */
+.bd_spacing {
+padding:15px;
+}
+.txt_alr{
+  text-align: right
+}
