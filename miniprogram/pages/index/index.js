@@ -10,33 +10,65 @@ Page({
   },
 
   onLoad: function() {
+    console.log('[onLoad]');
+    this.loaded = true;
     if (!wx.cloud) {
       return
     }
 
     // query db
+    let musicList = [];
+    try{
+      musicList = wx.getStorageSync('musicList') || [];
+    }catch(e){}
+    if(musicList.length){
+      console.log('getStorageSync musicList.length:' + musicList.length);
+      this.setData({
+        musicList: musicList
+      });
+    }else{
+      const db = wx.cloud.database();
+      // 查询当前用户所有的 counters
+      db.collection('mp3').get({
+        success: res => {
+          this.setData({
+            musicList: res.data
+          });
+          try {
+            wx.setStorageSync('musicList', res.data);
+          } catch (e) { }
+          console.log('[数据库] [查询记录] 成功: ', res)
+        },
+        fail: err => {
+          wx.showToast({
+            icon: 'none',
+            title: '查询记录失败'
+          })
+          console.error('[数据库] [查询记录] 失败：', err)
+        }
+      });
+    }    
     
-    const db = wx.cloud.database();
-    // 查询当前用户所有的 counters
-    db.collection('mp3').get({
-      success: res => {
-        this.setData({
-          musicList: res.data
-        })
-        try {
-          wx.setStorageSync('musicList', res.data);
-        } catch (e) { }
-        console.log('[数据库] [查询记录] 成功: ', res)
-      },
-      fail: err => {
-        wx.showToast({
-          icon: 'none',
-          title: '查询记录失败'
-        })
-        console.error('[数据库] [查询记录] 失败：', err)
-      }
+  },
+  /**
+   * 生命周期函数--监听页面显示
+   */
+  onShow: function () {
+    console.log('[onShow]');
+    if(this.loaded){
+      this.hideInput();
+      this.onLoad();
+    }
+  },
+  onDeleteCurrent: function(e){
+    let mid = e.currentTarget.dataset.mid,
+      musicList = this.data.musicList.filter((item) => {
+      return item._id !== mid;
     });
-    
+    wx.setStorageSync('musicList', musicList);
+    this.setData({
+      musicList: musicList
+    });
   },
   showInput: function () {
       this.setData({

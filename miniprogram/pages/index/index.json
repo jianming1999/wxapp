@@ -1,1 +1,6 @@
-{}
+{
+	"usingComponents": {
+	    "i-swipeout": "../../components/swipeout/index",
+	    "i-cell": "../../components/cell/index"
+	  }
+}

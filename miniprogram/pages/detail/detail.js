@@ -14,7 +14,9 @@ Page({
     currentTime:0,
     durationText: '00:00',
     duration:0,
-    playing: false
+    playing: false,
+    sureAdd: true,
+    showSureAdd: false
   },
 
   /**
@@ -29,7 +31,17 @@ Page({
       data;
     this.currentIndex = 0;
     this.musicList = [];
+    this.cacheMusicList = wx.getStorageSync('musicList') || [];
+
     if(fileHash && albumID){
+      if(this.cacheMusicList.filter((item) => {
+        return item.fileHash === fileHash;
+      }).length === 0){
+        this.setData({
+          showSureAdd: true
+        });  
+      }
+      
       wx.request({
         url: 'https://wwwapi.kugou.com/yy/index.php?r=play/getdata&hash='+ fileHash +'&album_id=' + albumID,
         method: 'get',
@@ -44,10 +56,7 @@ Page({
         }
       });
     }else if(mid){
-      try{
-        this.musicList = wx.getStorageSync('musicList');
-        console.log(this.musicList);
-      }catch(e){}
+       this.musicList = this.cacheMusicList;
       
        data = this.musicList.filter((item, index) => {
         if(item._id === mid){
@@ -187,6 +196,22 @@ Page({
       this.currentIndex = ci;
       this.playByData(this.musicList[ci]);
     }
+  },
+  onAddMusicList: function(){
+    console.log('[onAddMusicList]');
+    let musicList = this.cacheMusicList;
+    musicList.push({
+      _id: musicList.length,
+      poster: this.data.poster,
+      name: this.data.name,
+      author: this.data.author,
+      src: this.data.src,
+      fileHash: this.data.fileHash
+    });
+    wx.setStorageSync('musicList', musicList);
+    this.setData({
+      sureAdd: false
+    });
   },
   playByData: function(data){
     this.setData({

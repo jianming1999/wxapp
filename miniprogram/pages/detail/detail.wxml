@@ -39,4 +39,12 @@
       </view>
     </view>
 
+    <view wx:if="{{showSureAdd}}" class="weui-cells">
+      <view class="weui-cell">
+          <button wx:if="{{sureAdd}}" class="weui-btn mini-btn" size="mini" type="primary" bindtap="onAddMusicList">加入到我的列表</button>
+          <button wx:else class="weui-btn mini-btn" size="mini" type="default">已加到我的列表</button>
+          
+      </view>
+    </view>
+
 </view>
